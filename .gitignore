@@ -1,0 +1,30 @@
+﻿# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Generated Prisma clients
+**/generated/
+
+# Build files
+dist/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# AI coding tool files
+**/.agents/
+**/.claude/
+**/.windsurf/

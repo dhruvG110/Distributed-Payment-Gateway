@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model wallet{
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id String  @unique @db.Uuid
+  balance BigInt @default(0)
+  currency String @default("INR") @db.VarChar(3)
+  status status @default(active)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  events wallet_event[]
+  @@index([status])
+}
+model wallet_event {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wallet_id String @db.Uuid
+  event_type wallet_event_type
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  wallet wallet @relation(fields: [wallet_id], references: [id], onDelete: Cascade)
+  @@index([wallet_id, created_at])
+}
+model wallet_operation {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wallet_id  String   @db.Uuid
+  payment_id String   @db.Uuid
+  amount     BigInt
+  operation  String   @db.VarChar(20)
+  status     String   @default("reserved") @db.VarChar(20)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  @@unique([payment_id, operation])
+  @@index([wallet_id, created_at])
+}
+enum status {
+  active
+  frozen
+}
+enum wallet_event_type {
+  created
+  freeze
+  unfreeze
+}

@@ -1,0 +1,94 @@
+services:
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+    env_file:
+      - ./auth-service/.env
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+    init: true
+
+  wallet-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: wallet-service
+    env_file:
+      - ./wallet-service/.env
+    ports:
+      - "4001:4001"
+    restart: unless-stopped
+    init: true
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    env_file:
+      - ./payment-service/.env
+    environment:
+      WALLET_SERVICE_URL: http://wallet-service:4001
+      LEDGER_SERVICE_URL: http://ledger-service:4003
+    ports:
+      - "4002:4002"
+    depends_on:
+      - wallet-service
+    restart: unless-stopped
+    init: true
+
+  ledger-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: ledger-service
+    env_file:
+      - ./ledger-service/.env
+    environment:
+      PAYMENT_SERVICE_URL: http://payment-service:4002
+    ports:
+      - "4003:4003"
+    restart: unless-stopped
+    init: true
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: notification-service
+    env_file:
+      - ./notification-service/.env
+    ports:
+      - "4004:4004"
+    restart: unless-stopped
+    init: true
+
+  reconciliation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: reconciliation-service
+    env_file:
+      - ./reconciliation-service/.env
+    environment:
+      PAYMENT_SERVICE_URL: http://payment-service:4002
+      WALLET_SERVICE_URL: http://wallet-service:4001
+      LEDGER_SERVICE_URL: http://ledger-service:4003
+    ports:
+      - "4005:4005"
+    depends_on:
+      - payment-service
+      - wallet-service
+      - ledger-service
+    restart: unless-stopped
+    init: true

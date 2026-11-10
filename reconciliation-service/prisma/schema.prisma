@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model reconciliation_run {
+  id                 String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status             reconciliation_run_status @default(running)
+  started_at         DateTime                @default(now()) @db.Timestamptz(6)
+  completed_at       DateTime?               @db.Timestamptz(6)
+  total_checked      Int                     @default(0)
+  matched_count      Int                     @default(0)
+  mismatched_count   Int                     @default(0)
+  incomplete_count   Int                     @default(0)
+  needs_review_count Int                     @default(0)
+  error_count        Int                     @default(0)
+  created_at         DateTime                @default(now()) @db.Timestamptz(6)
+  records            reconciliation_record[]
+
+  @@index([status, started_at])
+  @@index([created_at])
+}
+
+model reconciliation_record {
+  id               String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  payment_id       String                       @db.Uuid
+  run_id           String                       @db.Uuid
+  status           reconciliation_record_status
+  expected_amount  BigInt?
+  wallet_debit     BigInt?
+  wallet_credit    BigInt?
+  ledger_debit     BigInt?
+  ledger_credit    BigInt?
+  mismatch_reason  String?                      @db.Text
+  details          Json?
+  created_at       DateTime                     @default(now()) @db.Timestamptz(6)
+  run              reconciliation_run          @relation(fields: [run_id], references: [id], onDelete: Cascade)
+
+  @@unique([run_id, payment_id])
+  @@index([payment_id, created_at])
+  @@index([run_id, status])
+  @@index([status, created_at])
+}
+
+enum reconciliation_run_status {
+  running
+  completed
+  completed_with_errors
+  failed
+}
+
+enum reconciliation_record_status {
+  matched
+  mismatched
+  incomplete
+  needs_review
+}
