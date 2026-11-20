@@ -9,8 +9,10 @@ import {
   listWalletOperationsByPayment,
   paymentIdQuerySchema,
 } from "../service/walletOperationLookup.js";
+import rateLimiter from "../middleware/rateLimiter.js";
 
 const router = express.Router();
+router.use(rateLimiter)
 const userIdSchema = z.string().uuid();
 const walletIdSchema = z.string().uuid();
 const walletCreateSchema = z
@@ -27,7 +29,7 @@ const serializeWallet = (wallet) => ({
   balance: wallet.balance.toString(),
 });
 
-router.get("/internal/operations/", internalAuth, async (req, res) => {
+router.get("/internal/operations/", internalAuth, rateLimiter, async (req, res) => {
   const validation = paymentIdQuerySchema.safeParse(req.query);
   if (!validation.success) {
     return res.status(400).json({
@@ -56,7 +58,7 @@ router.get("/internal/operations/", internalAuth, async (req, res) => {
   }
 });
 
-router.post("/create", authMiddleware, async (req, res) => {
+router.post("/create", authMiddleware,rateLimiter, async (req, res) => {
   try {
     const validation = walletCreateSchema.safeParse({
       user_id: req.user.id,
@@ -108,7 +110,7 @@ router.post("/create", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/me", authMiddleware, async (req, res) => {
+router.get("/me", authMiddleware,rateLimiter, async (req, res) => {
   try {
     const validation = userIdSchema.safeParse(req.user.id);
     if (!validation.success) {
@@ -141,7 +143,7 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/transactions", authMiddleware, async (req, res) => {
+router.get("/transactions", authMiddleware,rateLimiter, async (req, res) => {
   try {
     const validation = userIdSchema.safeParse(req.user.id);
     if (!validation.success) {
@@ -180,7 +182,7 @@ router.get("/transactions", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/:id", authMiddleware, async (req, res) => {
+router.get("/:id", authMiddleware,rateLimiter, async (req, res) => {
   try {
     const idValidation = walletIdSchema.safeParse(req.params.id);
     const userValidation = userIdSchema.safeParse(req.user.id);
@@ -334,7 +336,7 @@ const reserveSchema = z
   })
   .strict();
 
-router.post("/internal/reserve", internalAuth, async (req, res) => {
+router.post("/internal/reserve", internalAuth,rateLimiter, async (req, res) => {
   try {
     // 1. Validate request
     const validation = reserveSchema.safeParse(req.body);
@@ -567,7 +569,7 @@ const releaseSchema = z
   })
   .strict();
 
-router.post("/internal/release", internalAuth, async (req, res) => {
+router.post("/internal/release", internalAuth,rateLimiter, async (req, res) => {
   try {
     const validation = releaseSchema.safeParse(req.body);
 
@@ -698,7 +700,7 @@ const commitSchema = z
   })
   .strict();
 
-router.post("/internal/commit", internalAuth, async (req, res) => {
+router.post("/internal/commit", internalAuth,rateLimiter, async (req, res) => {
   try {
     const validation = commitSchema.safeParse(req.body);
 
@@ -814,7 +816,7 @@ const creditSchema = z
   })
   .strict();
 
-router.post("/internal/credit", internalAuth, async (req, res) => {
+router.post("/internal/credit", internalAuth, rateLimiter, async (req, res) => {
   try {
     const validation = creditSchema.safeParse(req.body);
     if (!validation.success) {

@@ -1,6 +1,6 @@
 
 import express from "express";
-import { rateLimit } from "express-rate-limit";
+import rateLimiter from "../middleware/rateLimiter.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -9,17 +9,7 @@ import authMiddleware from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Rate Limiter
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 10,
-    standardHeaders: "draft-8",
-    legacyHeaders: false,
-    message: {
-        success: false,
-        message: "Too many attempts. Try again after 15 minutes."
-    }
-});
+
 // Register validation schema
 const registerSchema = z.object({
     name: z.string()
@@ -52,7 +42,7 @@ const signinSchema = z.object({
         .max(72, "Invalid password")
 }).strict();
 // REGISTER API
-router.post("/register", authLimiter, async (req, res) => {
+router.post("/register", rateLimiter, async (req, res) => {
     try {
         const validation = registerSchema.safeParse(req.body);
         if (!validation.success) {
@@ -123,7 +113,7 @@ router.post("/register", authLimiter, async (req, res) => {
 
 
 // SIGN IN API
-router.post("/signin", authLimiter, async (req, res) => {
+router.post("/signin", rateLimiter, async (req, res) => {
     try {
         const validation = signinSchema.safeParse(req.body);
         if (!validation.success) {

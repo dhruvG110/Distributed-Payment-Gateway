@@ -15,9 +15,11 @@ import {
   reconcilePayment,
   runReconciliation,
 } from "../service/reconciliation.service.js";
+import rateLimiter from "../middleware/rateLimiter.js";
 
 const router = express.Router();
-
+router.use(internalAuth);
+router.use(rateLimiter);
 const serializeAmounts = (record) => ({
   ...record,
   expected_amount: record.expected_amount?.toString() ?? null,
@@ -27,7 +29,7 @@ const serializeAmounts = (record) => ({
   ledger_credit: record.ledger_credit?.toString() ?? null,
 });
 
-router.post("/run", internalAuth, async (req, res) => {
+router.post("/run", async (req, res) => {
   const validation = runRequestSchema.safeParse(req.body);
   if (!validation.success) {
     return res.status(400).json({
@@ -56,7 +58,7 @@ router.post("/run", internalAuth, async (req, res) => {
   }
 });
 
-router.get("/", internalAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   const validation = listQuerySchema.safeParse(req.query);
   if (!validation.success) {
     return res.status(400).json({
@@ -131,7 +133,7 @@ router.get("/mismatches", internalAuth, async (req, res) => {
   }
 });
 
-router.get("/runs", internalAuth, async (req, res) => {
+router.get("/runs", async (req, res) => {
   const validation = runListQuerySchema.safeParse(req.query);
   if (!validation.success) {
     return res.status(400).json({
@@ -167,7 +169,7 @@ router.get("/runs", internalAuth, async (req, res) => {
   }
 });
 
-router.get("/runs/:id", internalAuth, async (req, res) => {
+router.get("/runs/:id", async (req, res) => {
   const validation = paymentIdSchema.safeParse(req.params.id);
   if (!validation.success) {
     return res.status(400).json({ success: false, message: "Invalid run ID" });
@@ -196,7 +198,7 @@ router.get("/runs/:id", internalAuth, async (req, res) => {
   }
 });
 
-router.get("/:id", internalAuth, async (req, res) => {
+router.get("/:id", async (req, res) => {
   const validation = paymentIdSchema.safeParse(req.params.id);
   if (!validation.success) {
     return res.status(400).json({

@@ -4,6 +4,8 @@ import prisma from "../db.js";
 import authMiddleware from "../middleware/auth.middleware.js";
 import internalAuth from "../middleware/internalAuth.js";
 import { processPayment } from "../service/payment-orchestrator.js";
+import rateLimiter from "../middleware/rateLimiter.js";
+import readRateLimiter from "../middleware/readRateLimiter.js";
 // import {
 //   createPaymentLockOwner,
 //   paymentLockDurationMs,
@@ -71,8 +73,8 @@ const respondWithExistingPayment = (res, payment, request) => {
 };
 
 // USER PAYMENT HISTORY
-router.get("/", authMiddleware, async (req, res) => {
-  try {
+router.get("/", authMiddleware, readRateLimiter, async (req, res) => {
+  try { 
     const validation = paymentHistoryQuerySchema.safeParse(req.query);
     if (!validation.success) {
       return res.status(400).json({
@@ -113,7 +115,7 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 // PAYMENT DETAILS
-router.get("/:id", authMiddleware, async (req, res) => {
+router.get("/:id", authMiddleware,readRateLimiter, async (req, res) => {
   try {
     const validation = paymentIdSchema.safeParse(req.params.id);
     if (!validation.success) {
@@ -150,7 +152,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
 });
 
 // CREATE PAYMENT
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, rateLimiter ,async (req, res) => {
   try {
     const validation = paymentSchema.safeParse(req.body);
 
@@ -260,7 +262,7 @@ router.post("/", authMiddleware, async (req, res) => {
 });
 
 // Cancellation is limited to steps before reserve is recorded; later steps may have moved money.
-router.post("/:id/cancel", authMiddleware, async (req, res) => {
+router.post("/:id/cancel" ,authMiddleware, rateLimiter, async (req, res) => {
   try {
     const validation = paymentIdSchema.safeParse(req.params.id);
     if (!validation.success) {
@@ -426,7 +428,7 @@ router.post("/:id/cancel", authMiddleware, async (req, res) => {
   }
 
 });
-router.get("/internal/:id", internalAuth, async (req, res) => {
+router.get("/internal/:id", internalAuth,  async (req, res) => {
   try {
     const validation = z.string().uuid().safeParse(req.params.id);
 

@@ -7,9 +7,11 @@ import {
   findLedgerTransactionByPayment,
   paymentIdQuerySchema,
 } from "../service/ledgerLookup.js";
+import rateLimiter from "../middleware/rateLimiter.js";
 
 const router = express.Router();
-
+router.use(internalAuth);
+router.use(rateLimiter);
 // Request validation
 const ledgerSchema = z
   .object({
@@ -17,7 +19,7 @@ const ledgerSchema = z
   })
   .strict();
 
-router.get("/internal/", internalAuth, async (req, res) => {
+router.get("/internal/", async (req, res) => {
   const validation = paymentIdQuerySchema.safeParse(req.query);
   if (!validation.success) {
     return res.status(400).json({
@@ -53,7 +55,7 @@ router.get("/internal/", internalAuth, async (req, res) => {
 });
 
 // POST LEDGER ENTRY
-router.post("/post", internalAuth, async (req, res) => {
+router.post("/post", async (req, res) => {
   try {
     // 1. Validate request
     const validation = ledgerSchema.safeParse(req.body);
