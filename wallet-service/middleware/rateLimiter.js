@@ -5,7 +5,7 @@ import redis from "../config/redis.js";
 
 const walletRateLimiter = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(30, "15 m"),
+  limiter: Ratelimit.slidingWindow(1000, "15 m"),
   prefix: "paymesh:wallet",
 });
 

@@ -12,7 +12,6 @@ import {
 import rateLimiter from "../middleware/rateLimiter.js";
 
 const router = express.Router();
-router.use(rateLimiter)
 const userIdSchema = z.string().uuid();
 const walletIdSchema = z.string().uuid();
 const walletCreateSchema = z
@@ -110,7 +109,7 @@ router.post("/create", authMiddleware,rateLimiter, async (req, res) => {
   }
 });
 
-router.get("/me", authMiddleware,rateLimiter, async (req, res) => {
+router.get("/me", authMiddleware, async (req, res) => {
   try {
     const validation = userIdSchema.safeParse(req.user.id);
     if (!validation.success) {

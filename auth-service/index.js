@@ -17,12 +17,17 @@ try {
 
 app.use(helmet());
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials:true
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
-app.get("/health",  (req, res) => {
+app.get("/health", (req, res) => {
   res.status(200).send("Auth service is running , Health Check Confirmed");
 });
 app.listen(process.env.PORT, (req) => {
